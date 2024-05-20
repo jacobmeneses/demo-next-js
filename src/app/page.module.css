@@ -82,7 +82,6 @@
 }
 
 .center::before {
-  background: var(--secondary-glow);
   border-radius: 50%;
   width: 480px;
   height: 360px;
@@ -90,7 +89,6 @@
 }
 
 .center::after {
-  background: var(--primary-glow);
   width: 240px;
   height: 180px;
   z-index: -1;
@@ -215,9 +213,7 @@
     filter: invert(1);
   }
 
-  .logo {
-    filter: invert(1) drop-shadow(0 0 0.3rem #ffffff70);
-  }
+
 }
 
 @keyframes rotate {
