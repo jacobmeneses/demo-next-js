@@ -20,8 +20,8 @@ function Draggable(props) {
 
 
 function Droppable(props) {
-    const { title } = props;
-    const {isOver, setNodeRef} = useDroppable({
+    const { title, onKeyDownNewTask, newTaskText, onChangeNewTaskText } = props;
+    const { isOver, setNodeRef } = useDroppable({
       id: props.id,
     });
     const style = {
@@ -31,6 +31,7 @@ function Droppable(props) {
     return (
       <div className={styles.stack} ref={setNodeRef} style={style}>
         <div className={styles.center}><p>{title}</p></div>
+        <div key={props.id+'-add-new'} className={styles.task}><input className={styles.newTaskInput} onChange={onChangeNewTaskText} onKeyDown={(e) => onKeyDownNewTask(e)} value={newTaskText} type="text"/></div>
         {props.children}
       </div>
     );
@@ -38,7 +39,7 @@ function Droppable(props) {
 
 export default function Board() {
     const [ stacks, setStacks ] = useState([
-        { tasks: [], title: 'Todo', key: 'todo' },
+        { tasks: [], title: 'Todo', key: 'todo', newTaskText: '' },
         { tasks: [
             {
                 title: 'React',
@@ -49,8 +50,8 @@ export default function Board() {
             {
                 title: 'Deploy',
             },
-        ], title: 'In progress', key: 'inprogress' },
-        { tasks: [], title: 'Done', key: 'done' },
+        ], title: 'In progress', key: 'inprogress', newTaskText: '' },
+        { tasks: [], title: 'Done', key: 'done', newTaskText: '' },
     ])
 
     function handleDragEnd(event) {
@@ -64,8 +65,6 @@ export default function Board() {
         } 
 
         console.log(event);
-
-        let fn, stack, fnrm;
 
         const source_index = stacks.findIndex((x) => {
             return x.key === source;
@@ -95,13 +94,44 @@ export default function Board() {
         }, [])
     }
 
+    function handleEnterDown(index, e) {
+        if (e.key === 'Enter') {
+            setStacks(prev => {
+                const next = prev.map(v => Object.assign({}, v));
+                const newTaskTitle = next[index].newTaskText;
+
+                next[index].newTaskText = '';
+
+                const previous_tasks = next[index].tasks.map(v => Object.assign({}, v));
+
+                previous_tasks.unshift({ title: newTaskTitle });
+
+                next[index].tasks = previous_tasks;
+
+                return next;
+            }, [])
+        }
+    }
+
+    function handleChangeNewTaskText(e, index) {
+        setStacks(prev => {
+            const next = prev.map(v => Object.assign({}, v));
+
+            next[index].newTaskText = e.target.value;
+
+            return next;
+        }, [])
+    }
+
     return (
         <DndContext onDragEnd={handleDragEnd}>
             <main>
                 <div className={styles.grid}>
                     {
-                        stacks.map((obj) => (
-                            <Droppable id={obj.key} key={obj.key} title={obj.title}>
+                        stacks.map((obj, index) => (
+                            <Droppable id={obj.key} key={obj.key} title={obj.title}
+                                onChangeNewTaskText={(e) => handleChangeNewTaskText(e, index)}
+                                onKeyDownNewTask={(e) => handleEnterDown(index, e)} newTaskText={obj.newTaskText}>
                                 { obj.tasks.map((v, i) => (<Draggable key={`${i}-${obj.key}`} id={`${i}-${obj.key}`} v={v}></Draggable>))}
                             </Droppable>
                         ))
