@@ -37,21 +37,21 @@ function Droppable(props) {
   }
 
 export default function Board() {
-    const stack_title = 'TO DO';
-    const tasks = [
-        {
-            title: 'React',
-        },
-        {
-            title: 'Build',
-        },
-        {
-            title: 'Deploy',
-        },
-    ];
-
-    const [ stack1, setStack1 ] = useState([])
-    const [ stack2, setStack2 ] = useState([])
+    const [ stacks, setStacks ] = useState([
+        { tasks: [], title: 'Todo', key: 'todo' },
+        { tasks: [
+            {
+                title: 'React',
+            },
+            {
+                title: 'Build',
+            },
+            {
+                title: 'Deploy',
+            },
+        ], title: 'In progress', key: 'inprogress' },
+        { tasks: [], title: 'Done', key: 'done' },
+    ])
 
     function handleDragEnd(event) {
         const { active, over } = event;
@@ -59,28 +59,39 @@ export default function Board() {
         const source = id_splitted[1];
         const index = parseInt(id_splitted[0], 10);
 
+        if ( !over ) {
+            return;
+        } 
+
         console.log(event);
 
-        let fn, stack;
+        let fn, stack, fnrm;
 
-        if ( source !== 'middle') {
-            console.log('Source not valid for now');
-            return;
-        }
+        const source_index = stacks.findIndex((x) => {
+            return x.key === source;
+        });
+        const target_index = stacks.findIndex((x) => {
+            return x.key === over.id;
+        });
 
-        const item = tasks[index];
+        console.log(over.id, target_index, source, source_index, index);
 
-        switch (over.id) {
-            case 'droppable': fn = setStack1; stack = stack1; break;
-            case 'container': fn = setStack2; stack = stack2; break;
-        }
+        setStacks(prev => {
+            const next = prev.map(v => Object.assign({}, v));
 
-        fn((prev) => {
-            const new_list = Object.assign([], prev);
+            const item = Object.assign({}, next[source_index].tasks[index]);
+            
+            const source_tasks = next[source_index].tasks.map(v => Object.assign({}, v));
 
-            new_list.push(item);
+            source_tasks.splice(index, 1);
+            next[source_index].tasks = source_tasks;
+            const target_tasks = next[target_index].tasks.map(v => Object.assign({}, v));
 
-            return new_list;
+            target_tasks.push(item);
+            next[target_index].tasks = target_tasks;
+            console.log(item)
+
+            return next;
         }, [])
     }
 
@@ -88,17 +99,13 @@ export default function Board() {
         <DndContext onDragEnd={handleDragEnd}>
             <main>
                 <div className={styles.grid}>
-                    <Droppable id="droppable" title={stack_title}>
-                        { stack1.map((v, i) => (<Draggable key={i + '-stack1'} id={i + '-stack1'} v={v} />)) }
-                    </Droppable>
-
-                    <div className={styles.stack}>
-                        { tasks.map((v, i) => (<Draggable key={i + '-middle'} id={i + '-middle'} v={v} />)) }
-                    </div>
-
-                    <Droppable id="container" title="demo">
-                    { stack2.map((v, i) => (<Draggable key={i + '-demo'} id={i + '-demo'} v={v} />)) }
-                    </Droppable>
+                    {
+                        stacks.map((obj) => (
+                            <Droppable id={obj.key} key={obj.key} title={obj.title}>
+                                { obj.tasks.map((v, i) => (<Draggable key={`${i}-${obj.key}`} id={`${i}-${obj.key}`} v={v}></Draggable>))}
+                            </Droppable>
+                        ))
+                    }
                 </div>
             </main>
         </DndContext>
