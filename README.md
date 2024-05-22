@@ -2,6 +2,10 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
+The backend of this repo is this:
+
+https://github.com/jacobmeneses/nodejs-backend
+
 First, run the development server:
 
 ```bash

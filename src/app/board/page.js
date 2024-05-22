@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from "./page.module.css";
 import { DndContext, useDroppable, useDraggable } from '@dnd-kit/core';
 
@@ -41,19 +41,36 @@ function Droppable(props) {
 export default function Board() {
     const [ stacks, setStacks ] = useState([
         { tasks: [], title: 'Todo', key: 'todo', newTaskText: '' },
-        { tasks: [
-            {
-                title: 'React',
-            },
-            {
-                title: 'Build',
-            },
-            {
-                title: 'Deploy',
-            },
-        ], title: 'In progress', key: 'inprogress', newTaskText: '' },
+        { tasks: [], title: 'In progress', key: 'inprogress', newTaskText: '' },
         { tasks: [], title: 'Done', key: 'done', newTaskText: '' },
     ])
+
+    useEffect(() => {
+        return async () => {
+            const response = await fetch('http://localhost:3012/api/v1/tasks');
+            const result = await response.json();
+            const stacksIndexes = {};
+            const stacks = result.columns.map((v, index) => {
+                stacksIndexes[v.id] = index;
+
+                return {
+                    tasks: [],
+                    title: v.title,
+                    key: v.id + v.title.toLowerCase().replace(/\s+/g, ''),
+                    newTaskText: ''
+                };
+            });
+            result.tasks.forEach(element => {
+                const index = stacksIndexes[element.columnId];
+
+                stacks[index].tasks.push({
+                    title: element.title,
+                })
+            });
+
+            setStacks(stacks);
+        };
+    }, [])
 
     function handleDragEnd(event) {
         const { active, over } = event;
