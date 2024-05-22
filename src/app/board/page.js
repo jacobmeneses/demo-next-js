@@ -30,8 +30,9 @@ function Droppable(props) {
 
     return (
       <div className={styles.stack} ref={setNodeRef} style={style}>
-        <div className={styles.center}><p>{title}</p></div>
-        <div key={props.id+'-add-new'} className={styles.task}><input className={styles.newTaskInput} onChange={onChangeNewTaskText} onKeyDown={(e) => onKeyDownNewTask(e)} value={newTaskText} type="text"/></div>
+        <div className={styles.center}><p>{title} {props.children.length}</p></div>
+        <div key={props.id+'-add-new'} className={styles.task}>
+                <input placeholder='Type new task title and press ENTER' className={styles.newTaskInput} onChange={onChangeNewTaskText} onKeyDown={(e) => onKeyDownNewTask(e)} value={newTaskText} type="text"/></div>
         {props.children}
       </div>
     );
@@ -95,8 +96,12 @@ export default function Board() {
     }
 
     function handleEnterDown(index, e) {
-        if (e.key === 'Enter') {
+        if ( e.key === 'Enter' ) {
             setStacks(prev => {
+                if ( prev[index].newTaskText.length === 0 ) {
+                    return prev;
+                }
+
                 const next = prev.map(v => Object.assign({}, v));
                 const newTaskTitle = next[index].newTaskText;
 
