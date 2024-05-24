@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from "./page.module.css";
 import { DndContext, useDroppable, useDraggable } from '@dnd-kit/core';
+import { fetchTasks, moveTask } from './fetchTasks';
 
 function Draggable(props) {
     const { id, v } = props;
@@ -44,33 +45,30 @@ export default function Board() {
         { tasks: [], title: 'In progress', key: 'inprogress', newTaskText: '' },
         { tasks: [], title: 'Done', key: 'done', newTaskText: '' },
     ])
+    const [ updating, setUpdating ] = useState({ taskId: 0, columnId: 0 });
 
     useEffect(() => {
-        return async () => {
-            const response = await fetch('http://localhost:3012/api/v1/tasks');
-            const result = await response.json();
-            const stacksIndexes = {};
-            const stacks = result.columns.map((v, index) => {
-                stacksIndexes[v.id] = index;
-
-                return {
-                    tasks: [],
-                    title: v.title,
-                    key: v.id + v.title.toLowerCase().replace(/\s+/g, ''),
-                    newTaskText: ''
-                };
-            });
-            result.tasks.forEach(element => {
-                const index = stacksIndexes[element.columnId];
-
-                stacks[index].tasks.push({
-                    title: element.title,
-                })
-            });
+        const fn = async () => {
+            const stacks = await fetchTasks();
 
             setStacks(stacks);
         };
-    }, [])
+
+        fn();
+    }, []);
+
+    useEffect(() => {
+        const fn =  async () => {
+            try {
+                if ( updating.columnId !== 0 && updating.taskId !== 0 ){
+                    await moveTask(updating);
+                }
+            } catch {
+            }
+        };
+
+        fn();
+    }, [ updating ] )
 
     function handleDragEnd(event) {
         const { active, over } = event;
@@ -92,6 +90,18 @@ export default function Board() {
         });
 
         console.log(over.id, target_index, source, source_index, index);
+        const body = {
+            taskId: stacks[source_index].tasks[index].id,
+            columnId: stacks[target_index].id,
+        };
+
+        console.log('body = ', body);
+        setUpdating( prev => {
+            return {
+                taskId: stacks[source_index].tasks[index].id,
+                columnId: stacks[target_index].id,
+            };
+        })
 
         setStacks(prev => {
             const next = prev.map(v => Object.assign({}, v));
@@ -109,7 +119,7 @@ export default function Board() {
             console.log(item)
 
             return next;
-        }, [])
+        })
     }
 
     function handleEnterDown(index, e) {
@@ -131,7 +141,7 @@ export default function Board() {
                 next[index].tasks = previous_tasks;
 
                 return next;
-            }, [])
+            })
         }
     }
 
@@ -142,7 +152,7 @@ export default function Board() {
             next[index].newTaskText = e.target.value;
 
             return next;
-        }, [])
+        })
     }
 
     return (
