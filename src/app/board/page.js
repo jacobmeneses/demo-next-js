@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from "./page.module.css";
 import { DndContext, useDroppable, useDraggable } from '@dnd-kit/core';
-import { fetchTasks, moveTask } from './fetchTasks';
+import { fetchTasks, moveTask, newTask } from './fetchTasks';
 
 function Draggable(props) {
     const { id, v } = props;
@@ -46,6 +46,7 @@ export default function Board() {
         { tasks: [], title: 'Done', key: 'done', newTaskText: '' },
     ])
     const [ updating, setUpdating ] = useState({ taskId: 0, columnId: 0 });
+    const [ newTaskRequest, setNewTaskRequest] = useState({ index: -1, task: null });
 
     useEffect(() => {
         const fn = async () => {
@@ -69,6 +70,42 @@ export default function Board() {
 
         fn();
     }, [ updating ] )
+
+    useEffect(() => {
+        const fn = async () => {
+            try {
+                const index = newTaskRequest.index;
+                const cond = index !== -1 && newTaskRequest.task !== null;
+                console.log('fetch cond = ', cond);
+                console.log('new task request = ', newTaskRequest)
+
+                if ( cond ) {
+                    const result = await newTask(newTaskRequest.task);
+                    console.log('result = ', result);
+
+                    setStacks(prev => {
+                        const next = prev.map(v => Object.assign({}, v));
+
+                        next[index].newTaskText = '';
+
+                        const previous_tasks = next[index].tasks.map(v => Object.assign({}, v));
+
+                        previous_tasks.unshift(result.task);
+
+                        next[index].tasks = previous_tasks;
+
+                        return next;
+                    })
+                } else {
+                    console.log('here!')
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        };
+
+        fn();
+    }, [ newTaskRequest ])
 
     function handleDragEnd(event) {
         const { active, over } = event;
@@ -124,21 +161,20 @@ export default function Board() {
 
     function handleEnterDown(index, e) {
         if ( e.key === 'Enter' ) {
-            setStacks(prev => {
-                if ( prev[index].newTaskText.length === 0 ) {
+            console.log('hola', index, stacks[index].newTaskText )
+
+            setNewTaskRequest(prev => {
+                if ( stacks[index].newTaskText.length === 0 ) {
                     return prev;
                 }
 
-                const next = prev.map(v => Object.assign({}, v));
-                const newTaskTitle = next[index].newTaskText;
+                const next = Object.assign({}, prev);
 
-                next[index].newTaskText = '';
-
-                const previous_tasks = next[index].tasks.map(v => Object.assign({}, v));
-
-                previous_tasks.unshift({ title: newTaskTitle });
-
-                next[index].tasks = previous_tasks;
+                next.index = index;
+                next.task = {
+                    title: stacks[index].newTaskText,
+                    columnId: stacks[index].id,
+                };
 
                 return next;
             })

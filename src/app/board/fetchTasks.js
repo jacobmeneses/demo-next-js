@@ -42,3 +42,20 @@ export async function moveTask(body) {
         throw new Error(result);
     }  
 }
+
+export async function newTask(body) {
+    const response = await fetch(API_BASE_URL + '/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    });
+    const result = await response.json();
+
+    if (response.status !== 200 ){
+        throw new Error(result);
+    }
+
+    return result;
+}
