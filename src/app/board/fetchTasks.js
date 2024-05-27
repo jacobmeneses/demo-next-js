@@ -1,7 +1,14 @@
 const API_BASE_URL = 'http://localhost:3012/api/v1';
+const KEY_TOKEN_LOCAL_STORAGE = '_s_t';
 
 export async function fetchTasks() {
-    const response = await fetch(API_BASE_URL + '/tasks');
+    const _token = localStorage.getItem(KEY_TOKEN_LOCAL_STORAGE);
+
+    const response = await fetch(API_BASE_URL + '/tasks', {
+        headers: {
+            'Authorization': `bearer ${_token}`
+        }
+    });
     const result = await response.json();
     const stacksIndexes = {};
     const stacks = result.columns.map((v, index) => {
@@ -29,10 +36,13 @@ export async function fetchTasks() {
 }
 
 export async function moveTask(body) {
+    const _token = localStorage.getItem(KEY_TOKEN_LOCAL_STORAGE);
+
     const response = await fetch(API_BASE_URL + '/tasks/move', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `bearer ${_token}`
         },
         body: JSON.stringify(body),
     });
@@ -44,10 +54,13 @@ export async function moveTask(body) {
 }
 
 export async function newTask(body) {
+    const _token = localStorage.getItem(KEY_TOKEN_LOCAL_STORAGE);
+
     const response = await fetch(API_BASE_URL + '/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `bearer ${_token}`
         },
         body: JSON.stringify(body),
     });
