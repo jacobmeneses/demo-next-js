@@ -1,15 +1,20 @@
-const API_BASE_URL = 'http://localhost:3012/api/v1';
-const KEY_TOKEN_LOCAL_STORAGE = '_s_t';
+import { ApiBaseUrl, keyTokenLocalStorage } from '../constants';
+
 
 export async function fetchTasks() {
-    const _token = localStorage.getItem(KEY_TOKEN_LOCAL_STORAGE);
+    const _token = localStorage.getItem(keyTokenLocalStorage);
 
-    const response = await fetch(API_BASE_URL + '/tasks', {
+    const response = await fetch(ApiBaseUrl + '/tasks', {
         headers: {
             'Authorization': `bearer ${_token}`
         }
     });
     const result = await response.json();
+    
+    if (response.status !== 200 ){
+        throw new Error(result);
+    }  
+
     const stacksIndexes = {};
     const stacks = result.columns.map((v, index) => {
         stacksIndexes[v.id] = index;
@@ -36,9 +41,9 @@ export async function fetchTasks() {
 }
 
 export async function moveTask(body) {
-    const _token = localStorage.getItem(KEY_TOKEN_LOCAL_STORAGE);
+    const _token = localStorage.getItem(keyTokenLocalStorage);
 
-    const response = await fetch(API_BASE_URL + '/tasks/move', {
+    const response = await fetch(ApiBaseUrl + '/tasks/move', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -54,9 +59,9 @@ export async function moveTask(body) {
 }
 
 export async function newTask(body) {
-    const _token = localStorage.getItem(KEY_TOKEN_LOCAL_STORAGE);
+    const _token = localStorage.getItem(keyTokenLocalStorage);
 
-    const response = await fetch(API_BASE_URL + '/tasks', {
+    const response = await fetch(ApiBaseUrl + '/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

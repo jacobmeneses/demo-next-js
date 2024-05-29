@@ -50,9 +50,14 @@ export default function Board() {
 
     useEffect(() => {
         const fn = async () => {
-            const stacks = await fetchTasks();
+            try {
+                const stacks = await fetchTasks();
 
-            setStacks(stacks);
+                setStacks(stacks);
+            } catch (e) {
+                console.log(JSON.stringify(e))
+            }
+            
         };
 
         fn();
