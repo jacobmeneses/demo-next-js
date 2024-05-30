@@ -8,12 +8,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 function Draggable(props) {
-    const { id, v, onClickDelete } = props;
+    const { id, v, onClickDelete, isDone } = props;
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
       id: id,
     });
     const style = transform ? {
       transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    } : undefined;
+    const isDoneStyle = isDone ? {
+        'textDecoration' : 'line-through'
     } : undefined;
 
     return (
@@ -22,8 +25,9 @@ function Draggable(props) {
             e.stopPropagation()
             onClickDelete(e)
         }} className={styles.xmarkIcon} icon={faXmark} />
-        <div className={styles.taskInner} > <p {...listeners} key={id}>{v.title}</p> </div>
-
+        <div className={styles.taskInner} >
+            <p style={isDoneStyle} {...listeners} key={id}>{v.title}</p>
+            </div>
       </div>
     );
 }
@@ -253,7 +257,13 @@ export default function Board() {
                             <Droppable id={obj.key} key={obj.key} title={obj.title}
                                 onChangeNewTaskText={(e) => handleChangeNewTaskText(e, index)}
                                 onKeyDownNewTask={(e) => handleEnterDown(index, e)} newTaskText={obj.newTaskText}>
-                                { obj.tasks.map((v, i) => (<Draggable onClickDelete={(e) => handleOnClickDelete(e, index, i)} key={`${i}-${obj.key}`} id={`${i}-${obj.key}`} v={v}></Draggable>))}
+                                { obj.tasks.map((v, i) => (
+                                    <Draggable onClickDelete={(e) => handleOnClickDelete(e, index, i)}
+                                        key={`${i}-${obj.key}`}
+                                        id={`${i}-${obj.key}`} v={v}
+                                        isDone={obj.isColumnDone}
+                                        >
+                                        </Draggable>))}
                             </Droppable>
                         ))
                     }

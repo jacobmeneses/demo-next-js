@@ -24,6 +24,7 @@ export async function fetchTasks() {
             id: v.id,
             title: v.title,
             key: v.id + v.title.toLowerCase().replace(/\s+/g, ''),
+            isColumnDone: v.isColumnDone,
             newTaskText: ''
         };
     });
