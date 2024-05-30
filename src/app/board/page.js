@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from "./page.module.css";
-import { DndContext, useDroppable, useDraggable } from '@dnd-kit/core';
-import { fetchTasks, moveTask, newTask } from './fetchTasks';
+import { DndContext, useDroppable, useDraggable, useDrag } from '@dnd-kit/core';
+import { fetchTasks, moveTask, newTask, deleteTask } from './fetchTasks';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 function Draggable(props) {
-    const { id, v } = props;
+    const { id, v, onClickDelete } = props;
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
       id: id,
     });
@@ -15,7 +17,14 @@ function Draggable(props) {
     } : undefined;
 
     return (
-      <div key={id} ref={setNodeRef} className={styles.task} style={style} {...listeners} {...attributes}><p key={id}>{v.title}</p></div>
+      <div key={id} ref={setNodeRef} className={styles.task} style={style} {...attributes}>
+        <FontAwesomeIcon onClick={(e) => {
+            e.stopPropagation()
+            onClickDelete(e)
+        }} className={styles.xmarkIcon} icon={faXmark} />
+        <div className={styles.taskInner} > <p {...listeners} key={id}>{v.title}</p> </div>
+
+      </div>
     );
 }
 
@@ -33,7 +42,7 @@ function Droppable(props) {
       <div className={styles.stack} ref={setNodeRef} style={style}>
         <div className={styles.center}><p>{title} {props.children.length}</p></div>
         <div key={props.id+'-add-new'} className={styles.task}>
-                <input placeholder='Type new task title and press ENTER' className={styles.newTaskInput} onChange={onChangeNewTaskText} onKeyDown={(e) => onKeyDownNewTask(e)} value={newTaskText} type="text"/></div>
+            <input placeholder='Type new task title and press ENTER' className={styles.newTaskInput} onChange={onChangeNewTaskText} onKeyDown={(e) => onKeyDownNewTask(e)} value={newTaskText} type="text"/></div>
         {props.children}
       </div>
     );
@@ -47,6 +56,7 @@ export default function Board() {
     ])
     const [ updating, setUpdating ] = useState({ taskId: 0, columnId: 0 });
     const [ newTaskRequest, setNewTaskRequest] = useState({ index: -1, task: null });
+    const [ deleteTaskRequest, setDeleteTaskRequest ] = useState({ index_column: -1, index_task: -1, taskId: -1 })
 
     useEffect(() => {
         const fn = async () => {
@@ -57,7 +67,6 @@ export default function Board() {
             } catch (e) {
                 console.log(JSON.stringify(e))
             }
-            
         };
 
         fn();
@@ -111,6 +120,36 @@ export default function Board() {
 
         fn();
     }, [ newTaskRequest ])
+
+    useEffect(() => {
+        const fn = async () => {
+            try {
+                const { index_column, index_task } = deleteTaskRequest;
+                const condition = index_column !== -1 && index_task !== -1;
+                if ( condition ) {
+                    const response = await deleteTask({
+                        taskId: stacks[index_column].tasks[index_task].id
+                    });
+
+                    setStacks((prev) => {
+                        const next = prev.map(v => Object.assign({}, v));
+
+                        const previous_tasks = next[index_column].tasks.map(v => Object.assign({}, v));
+
+                        previous_tasks.splice(index_task, 1);
+
+                        next[index_column].tasks = previous_tasks;
+
+                        return next;
+                    })
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        };
+
+        fn();
+    }, [ deleteTaskRequest ])
 
     function handleDragEnd(event) {
         const { active, over } = event;
@@ -196,8 +235,17 @@ export default function Board() {
         })
     }
 
+    function handleOnClickDelete(e, index_column, index_task) {
+        console.log('clicked on delete')
+        setDeleteTaskRequest({ index_column, index_task})
+    }
+
+    function handleDragStart(e) {
+        console.log('drag start', e)
+    }
+
     return (
-        <DndContext onDragEnd={handleDragEnd}>
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <main>
                 <div className={styles.grid}>
                     {
@@ -205,7 +253,7 @@ export default function Board() {
                             <Droppable id={obj.key} key={obj.key} title={obj.title}
                                 onChangeNewTaskText={(e) => handleChangeNewTaskText(e, index)}
                                 onKeyDownNewTask={(e) => handleEnterDown(index, e)} newTaskText={obj.newTaskText}>
-                                { obj.tasks.map((v, i) => (<Draggable key={`${i}-${obj.key}`} id={`${i}-${obj.key}`} v={v}></Draggable>))}
+                                { obj.tasks.map((v, i) => (<Draggable onClickDelete={(e) => handleOnClickDelete(e, index, i)} key={`${i}-${obj.key}`} id={`${i}-${obj.key}`} v={v}></Draggable>))}
                             </Droppable>
                         ))
                     }

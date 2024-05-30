@@ -77,3 +77,22 @@ export async function newTask(body) {
 
     return result;
 }
+
+export async function deleteTask(request) {
+    const _token = localStorage.getItem(keyTokenLocalStorage);
+
+    const response = await fetch(ApiBaseUrl + '/tasks/' + request.taskId, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `bearer ${_token}`
+        }
+    });
+    const result = await response.json();
+
+    if (response.status !== 200 ){
+        throw new Error(result);
+    }
+
+    return result;
+}
