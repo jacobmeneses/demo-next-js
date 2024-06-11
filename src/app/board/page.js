@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from "./page.module.css";
 import { DndContext, useDroppable, useDraggable, useDrag } from '@dnd-kit/core';
-import { fetchTasks, moveTask, newTask, deleteTask } from './fetchTasks';
+import { fetchTasks, moveTask, newTask, deleteTask, getSprints } from './fetchTasks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
@@ -61,11 +61,33 @@ export default function Board() {
     const [ updating, setUpdating ] = useState({ taskId: 0, columnId: 0 });
     const [ newTaskRequest, setNewTaskRequest] = useState({ index: -1, task: null });
     const [ deleteTaskRequest, setDeleteTaskRequest ] = useState({ index_column: -1, index_task: -1, taskId: -1 })
+    const [ selectedSprint, setSelectedSprint ] = useState({ index: -1, sprints: [] });
 
     useEffect(() => {
+        const fn = async() => {
+            try {
+                const body = await getSprints();
+
+                setSelectedSprint({
+                    index: 0,
+                    sprints: body.sprints,
+                })
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        fn();
+    }, [])
+
+    useEffect(() => {
+        if ( selectedSprint.index === -1 ) {
+            return;
+        }
+
         const fn = async () => {
             try {
-                const stacks = await fetchTasks();
+                const stacks = await fetchTasks(selectedSprint.sprints[selectedSprint.index].id);
 
                 setStacks(stacks);
             } catch (e) {
@@ -74,7 +96,7 @@ export default function Board() {
         };
 
         fn();
-    }, []);
+    }, [ selectedSprint ]);
 
     useEffect(() => {
         const fn =  async () => {
@@ -248,10 +270,25 @@ export default function Board() {
         console.log('drag start', e)
     }
 
+    function handleChangeSprint(event) {
+        setSelectedSprint((prev) => {
+            const newState = Object.assign({}, prev);
+
+            newState.index = event.target.value;
+
+            return newState;
+        })
+    }
+
     return (
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <main>
-                <div className={styles.grid}>
+                <label htmlFor="sprint-selector">Sprint: </label>
+                <select id="sprint-selector" value={selectedSprint.index} onChange={handleChangeSprint}>
+                    { selectedSprint.sprints.map((v, i) => (<option key={v.id} value={i}>{v.title}</option>))}
+                </select>
+
+                <div className={styles.grid} style={{ 'display' : (selectedSprint.index === -1) ? 'none' : undefined }}>
                     {
                         stacks.map((obj, index) => (
                             <Droppable id={obj.key} key={obj.key} title={obj.title}

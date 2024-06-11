@@ -1,10 +1,19 @@
 import { ApiBaseUrl, keyTokenLocalStorage } from '../constants';
 
 
-export async function fetchTasks() {
+export async function fetchTasks(sprintId) {
     const _token = localStorage.getItem(keyTokenLocalStorage);
+    const params = {
+        spid: sprintId,
+    };
 
-    const response = await fetch(ApiBaseUrl + '/tasks', {
+    if ( sprintId === null ) {
+        delete params.spid;
+    }
+
+    const query = new URLSearchParams(params).toString();
+
+    const response = await fetch(ApiBaseUrl + '/tasks?' + query, {
         headers: {
             'Authorization': `bearer ${_token}`
         }
@@ -97,3 +106,23 @@ export async function deleteTask(request) {
 
     return result;
 }
+
+export async function getSprints() {
+    const _token = localStorage.getItem(keyTokenLocalStorage);
+
+    const response = await fetch(ApiBaseUrl +  '/sprints', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${_token}`,
+      },
+    });
+    const result = await response.json();
+
+    if (response.status !== 200 ){
+        throw new Error(result);
+    }
+
+    return result;
+  };
+  
