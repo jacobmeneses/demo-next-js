@@ -244,6 +244,7 @@ export default function Board() {
                 next.task = {
                     title: stacks[index].newTaskText,
                     columnId: stacks[index].id,
+                    sprintId: selectedSprint.sprints[selectedSprint.index].id,
                 };
 
                 return next;
