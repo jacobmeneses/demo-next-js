@@ -86,6 +86,10 @@ body {
   overflow-x: hidden;
 }
 
+.mainDiv {
+  padding-right: 2em;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
 }
