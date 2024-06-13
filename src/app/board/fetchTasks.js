@@ -1,17 +1,17 @@
 import { ApiBaseUrl, keyTokenLocalStorage } from '../constants';
 
 
-export async function fetchTasks(sprintId) {
+export async function fetchTasks(sprintId, params = {}) {
     const _token = localStorage.getItem(keyTokenLocalStorage);
-    const params = {
+    const _params = {
         spid: sprintId,
     };
 
     if ( sprintId === null ) {
-        delete params.spid;
+        delete _params.spid;
     }
 
-    const query = new URLSearchParams(params).toString();
+    const query = new URLSearchParams(_params).toString();
 
     const response = await fetch(ApiBaseUrl + '/tasks?' + query, {
         headers: {
@@ -22,7 +22,11 @@ export async function fetchTasks(sprintId) {
     
     if (response.status !== 200 ){
         throw new Error(result);
-    }  
+    }
+    
+    if ( params.plain_response ) {
+        return result;
+    }
 
     const stacksIndexes = {};
     const stacks = result.columns.map((v, index) => {
