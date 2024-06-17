@@ -1,6 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import styles from "./page.module.css";
 import { fetchTasks } from '../board/fetchTasks'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
 
 export default function Backlog() {
     const [ tasks, setTasks ] = useState([]);
@@ -19,13 +22,25 @@ export default function Backlog() {
         fn();
     }, [])
 
+    const onClickDelete = function(e) {
+
+    };
+
     return (
         <main>
-            <ul>
+            <div className={styles.stack}>
                 { tasks.map((v) => {
-                    return (<li key={v.id}>{v.title}</li>)
+                    return  (<div key={v.id} className={styles.task}>
+                         <FontAwesomeIcon onClick={(e) => {
+                            e.stopPropagation()
+                            onClickDelete(e)
+                        }} className={styles.xmarkIcon} icon={faXmark} />
+                        <div className={styles.taskInner} >
+                            <p key={v.id}>{v.title}</p>
+                        </div>
+                    </div>)
                 })}
-            </ul>
+            </div>
         </main>
     )
 }

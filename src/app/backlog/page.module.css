@@ -1,0 +1,23 @@
+.stack {
+    background: rgb(245, 250, 249);
+    padding: 1px 0px;
+}
+
+.taskInner {
+    height: 5em;
+    width: 100%;
+}
+
+.task {
+    position: relative;
+    background: white;
+    border: 1px solid  rgb(239, 239, 239);
+    border-radius: 5px;
+    height: 2.5em;
+    margin: 5px 3px;
+}
+.xmarkIcon {
+    position: absolute;
+    top: 0;
+    right: 0;
+}

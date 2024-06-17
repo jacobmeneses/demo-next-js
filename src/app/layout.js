@@ -13,6 +13,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <div className="mainDiv">
+          <div className="menuHeader">
+            <a className="menuHeaderItem" href="/backlog">Backlog</a>
+            <a className="menuHeaderItem" href="/board">Board</a>
+          </div>
+
           {children}
         </div>
       </body>
