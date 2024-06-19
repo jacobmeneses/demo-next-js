@@ -48,6 +48,7 @@ export async function fetchTasks(sprintId, params = {}) {
         stacks[index].tasks.push({
             title: element.title,
             id: element.id,
+            creator: element.creator,
         })
     });
 
