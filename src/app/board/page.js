@@ -5,9 +5,28 @@ import styles from "./page.module.css";
 import { DndContext } from '@dnd-kit/core';
 import { Draggable, Droppable } from './components';
 import { getAllSprints, changeSelectedSprint, moveTask, createNewTask, deleteTask } from './logic';
+import { getSettings, postSettings, getSprints } from './fetchTasks';
 import { handleDragEnd, handleNewTaskAtEnterDown } from './handlers';
+import { create } from 'zustand'
+import { DefaultBoardSettings, BoardSettingsKey } from '../constants';
+
+const useStore = create((set) => ({
+    settings: {},
+    firstFetch: null,
+
+    updateSettings: (newSettings, firstFetch) => set({
+        settings: newSettings,
+        firstFetch
+    }),
+}));
 
 export default function Board() {
+    const settings = useStore((state) => state.settings);
+    const firstFetch = useStore((state) => state.firstFetch);
+
+    const updateSettings = useStore(state => state.updateSettings);
+    const [ sprints, setSprints ] = useState([])
+
     const [ stacks, setStacks ] = useState([
         { tasks: [], title: 'Todo', key: 'todo', newTaskText: '' },
         { tasks: [], title: 'In progress', key: 'inprogress', newTaskText: '' },
@@ -19,10 +38,86 @@ export default function Board() {
     const [ selectedSprint, setSelectedSprint ] = useState({ index: -1, sprints: [] });
 
     useEffect(() => {
-        getAllSprints({ setSelectedSprint, onError: console.log })
+        const fn = async () => {
+            try {
+                const result = await getSettings({ key: BoardSettingsKey });
+
+                updateSettings(result.settings, true);
+            } catch (e) {
+                console.log(e);
+                updateSettings({}, true)
+            }
+        };
+
+        fn();
     }, [])
+
     useEffect(() => {
-        changeSelectedSprint({ selectedSprint, setStacks, onError: console.log })
+        const fn = async () => {
+            try {
+                const body = await getSprints();
+
+                setSprints(body.sprints);
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        fn();  
+    }, [])
+
+    
+    useEffect(() => {
+        const fn = async () => {
+            let _selectedSprintId;
+
+            if ( settings.sprintId ) {
+                _selectedSprintId = settings.sprintId;
+            } else {
+                _selectedSprintId = sprints[0].id;
+            }
+
+            const index = sprints.findIndex((v) => v.id === _selectedSprintId);
+
+            const new_settings = { 
+                sprintId: settings.sprintId ? settings.sprintId : _selectedSprintId
+            };
+
+            setSelectedSprint({
+                index,
+                sprints,
+            })
+            if ( settings.sprintId !== new_settings.sprintId ) {
+                updateSettings(new_settings, false)
+            } 
+        };
+
+        if ( firstFetch && sprints.length > 0 ) {            
+            fn();
+        }
+    }, [ settings, sprints ])
+
+    useEffect(() => {
+        const fn = async () => {
+            try {
+                await postSettings({
+                    key: BoardSettingsKey,
+                    values: settings
+                });
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        if ( settings.sprintId && !firstFetch ) {
+            fn();
+        }
+           
+    }, [ settings ]);
+
+    useEffect(() => {
+        // fetch the tasks
+        changeSelectedSprint({ selectedSprint, settings, updateSettings, setStacks, onError: console.log })
     }, [ selectedSprint ]);
 
     useEffect(() => {

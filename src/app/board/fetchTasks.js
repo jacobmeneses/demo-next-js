@@ -125,9 +125,49 @@ export async function getSprints() {
     const result = await response.json();
 
     if (response.status !== 200 ){
-        throw new Error(result);
+        throw new Error({ code: response.status, result });
     }
 
     return result;
-  };
+};
+
+export async function getSettings(params) {
+    const _token = localStorage.getItem(keyTokenLocalStorage);
+    const query = new URLSearchParams(params).toString();
+
+    const response = await fetch(ApiBaseUrl +  '/users/settings?' + query, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${_token}`,
+        },
+    });
+    const result = await response.json();
+  
+    if ( response.status !== 200 ){
+        throw new Error({ code: response.status, result });
+    }
+
+    return result;
+};
+
+export async function postSettings(request) {
+    const _token = localStorage.getItem(keyTokenLocalStorage);
+
+    const response = await fetch(ApiBaseUrl + '/users/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${_token}`,
+        },
+        body: JSON.stringify(request),
+    });
+    const result = await response.json();
+
+    if (response.status !== 200 ){
+        throw new Error({ code: response.status, result });
+    }
+
+    return result;
+}
   

@@ -1,35 +1,28 @@
+import { DefaultBoardSettings } from "../constants";
 import {
     getSprints,
     fetchTasks,
     moveTask as postMoveTask,
     newTask,
     deleteTask as doDeleteTask,
+    getSettings,
 } from "./fetchTasks";
 
-export async function getAllSprints({ setSelectedSprint, onError }) {
-    try {
-        const body = await getSprints();
-
-        setSelectedSprint({
-            index: 0,
-            sprints: body.sprints,
-        })
-    } catch (e) {
-        if ( onError ){
-            onError(e)
-        }
-    }
-}
-
-export async function changeSelectedSprint({ selectedSprint, onError, setStacks}) {
+export async function changeSelectedSprint({ selectedSprint, settings, updateSettings, onError, setStacks}) {
     if ( selectedSprint.index === -1 ) {
         return;
     }
 
     try {
-        const stacks = await fetchTasks(selectedSprint.sprints[selectedSprint.index].id);
+        const sprintId = selectedSprint.sprints[selectedSprint.index].id;
+        const stacks = await fetchTasks(sprintId);
+
+        const new_settings = Object.assign({}, settings);
+        
+        new_settings.sprintId = sprintId;
 
         setStacks(stacks);
+        updateSettings(new_settings, false);
     } catch (e) {
         if ( onError ) {
             onError(e)
